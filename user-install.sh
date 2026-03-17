@@ -67,7 +67,7 @@ locate_binaries() {
             echo "To download prebuilt binaries from: https://github.com/ZaviiNet/library-loader/releases"
             echo ""
             echo "If you just installed Rust, try restarting your terminal or running:"
-            echo "    source \"\${HOME}/.cargo/env\""
+            echo "    source \"\$HOME/.cargo/env\""
             return 1
         fi
         
