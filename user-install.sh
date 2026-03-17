@@ -63,6 +63,7 @@ locate_binaries() {
         fi
         
         echo "Building release binaries (this may take a few minutes)..."
+        echo ""
         
         # Try to build everything
         if cargo build --release; then
@@ -70,11 +71,13 @@ locate_binaries() {
         else
             # If full build fails, try building just the CLI (GUI requires GTK3)
             echo ""
-            echo "Full build failed. Attempting to build CLI only..."
+            echo "Full build failed (this is expected if GTK3 development libraries are not installed)."
+            echo "Attempting to build CLI only..."
+            echo ""
             if cargo build --release --bin library-loader-cli; then
                 echo "✓ CLI build successful"
                 echo ""
-                echo "Note: GUI build failed (likely due to missing GTK3 development libraries)."
+                echo "Note: GUI build was skipped due to missing GTK3 development libraries."
                 echo "The CLI will be installed, but the GUI will not be available."
                 echo ""
                 echo "To build the GUI, install GTK3 development libraries:"
@@ -88,20 +91,15 @@ locate_binaries() {
         fi
         
         # Check which binaries were successfully built
-        CLI_EXISTS=false
-        GUI_EXISTS=false
-        
         if [ -f "target/release/library-loader-cli" ]; then
             CLI_BIN="target/release/library-loader-cli"
-            CLI_EXISTS=true
         fi
         
         if [ -f "target/release/library-loader-gui" ]; then
             GUI_BIN="target/release/library-loader-gui"
-            GUI_EXISTS=true
         fi
         
-        if [ "$CLI_EXISTS" = false ]; then
+        if [ -z "${CLI_BIN}" ]; then
             echo "Error: CLI binary not found after build"
             return 1
         fi
