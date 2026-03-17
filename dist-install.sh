@@ -2,8 +2,17 @@
 
 set -e
 
+# System-wide installation script (requires root/sudo)
+# For user-local installation on Bazzite/Silverblue, use user-install.sh instead
+
 if [ $UID != 0 ]; then
-    echo "Must run as root (sudo)"
+    echo "Error: System-wide installation requires root privileges"
+    echo ""
+    echo "Options:"
+    echo "  1. Run with sudo: sudo ./dist-install.sh"
+    echo "  2. Use user-local installation (recommended for Bazzite/Silverblue):"
+    echo "     ./user-install.sh"
+    echo ""
     exit 1
 fi
 

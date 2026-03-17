@@ -15,6 +15,12 @@ pub fn extract(
         fs::create_dir_all(footprint_folder.clone())?;
     }
 
+    // Create a separate folder for kicad_mod files (QoL improvement)
+    let kicad_mod_folder = PathBuf::from(&format.output_path).join(format!("{}_footprints", format.name));
+    if !kicad_mod_folder.exists() {
+        fs::create_dir_all(kicad_mod_folder.clone())?;
+    }
+
     //ensure the symbol library exists
     let fn_lib = PathBuf::from(&format.output_path).join(format!("{}.kicad_sym", format.name));
 
@@ -27,6 +33,10 @@ pub fn extract(
     }
 
     let mut symbols: Vec<String> = Vec::new();
+    let mut legacy_lib_contents: Vec<String> = Vec::new();
+    let mut legacy_dcm_contents: Vec<String> = Vec::new();
+    let mut has_legacy_lib_header = false;
+    let mut has_legacy_dcm_header = false;
 
     for i in 0..archive.len() {
         let mut item = archive.by_index(i)?;
@@ -35,8 +45,21 @@ pub fn extract(
         let base_name = path.file_name().unwrap().to_string_lossy().to_string();
         if let Some(ext) = &path.extension() {
             match ext.to_str() {
-                //footprint and 3d files are copied first
-                Some("kicad_mod") | Some("stl") | Some("stp") | Some("wrl") => {
+                // Copy kicad_mod files to both locations for compatibility
+                Some("kicad_mod") => {
+                    let mut f_data = Vec::<u8>::new();
+                    item.read_to_end(&mut f_data)?;
+                    
+                    // Copy to .pretty folder (original location)
+                    let mut f = File::create(footprint_folder.join(&base_name))?;
+                    f.write_all(&f_data)?;
+                    
+                    // Also copy to separate footprints folder (QoL improvement)
+                    let mut f2 = File::create(kicad_mod_folder.join(&base_name))?;
+                    f2.write_all(&f_data)?;
+                }
+                // 3D model files (only in .pretty folder)
+                Some("stl") | Some("stp") | Some("wrl") => {
                     let mut f_data = Vec::<u8>::new();
                     item.read_to_end(&mut f_data)?;
                     let mut f = File::create(footprint_folder.join(base_name))?;
@@ -46,11 +69,73 @@ pub fn extract(
                     //save these to add later, so KiCad will be able to load the footprints right away
                     symbols.push(name.to_owned());
                 }
+                // Legacy lib files - concatenate them (QoL improvement)
+                Some("lib") => {
+                    let mut f_data = Vec::<u8>::new();
+                    item.read_to_end(&mut f_data)?;
+                    let content = String::from_utf8_lossy(&f_data);
+                    
+                    for line in content.lines() {
+                        let trimmed = line.trim();
+                        // Skip headers if we already have one, keep component definitions
+                        if trimmed.starts_with("EESchema-LIBRARY") {
+                            if !has_legacy_lib_header {
+                                legacy_lib_contents.push(line.to_string());
+                                has_legacy_lib_header = true;
+                            }
+                        } else if !trimmed.is_empty() && !trimmed.starts_with("#End Library") {
+                            legacy_lib_contents.push(line.to_string());
+                        }
+                    }
+                }
+                // Legacy dcm files - concatenate them (QoL improvement)
+                Some("dcm") => {
+                    let mut f_data = Vec::<u8>::new();
+                    item.read_to_end(&mut f_data)?;
+                    let content = String::from_utf8_lossy(&f_data);
+                    
+                    for line in content.lines() {
+                        let trimmed = line.trim();
+                        // Skip headers if we already have one, keep component descriptions
+                        if trimmed.starts_with("EESchema-DOCLIB") {
+                            if !has_legacy_dcm_header {
+                                legacy_dcm_contents.push(line.to_string());
+                                has_legacy_dcm_header = true;
+                            }
+                        } else if !trimmed.is_empty() && !trimmed.starts_with("#End Doc Library") {
+                            legacy_dcm_contents.push(line.to_string());
+                        }
+                    }
+                }
+                // Ignore legacy .mod files (obsolete for recent KiCad versions)
+                Some("mod") => {
+                    // Skip these files as they're not needed for recent KiCad versions
+                }
                 _ => {
                     // ignore all other files
                 }
             }
         }
+    }
+
+    // Write concatenated legacy .lib file if we have content
+    if !legacy_lib_contents.is_empty() {
+        let legacy_lib_path = PathBuf::from(&format.output_path).join(format!("{}.lib", format.name));
+        let mut lib_file = File::create(legacy_lib_path)?;
+        for line in &legacy_lib_contents {
+            writeln!(lib_file, "{}", line)?;
+        }
+        writeln!(lib_file, "#End Library")?;
+    }
+
+    // Write concatenated legacy .dcm file if we have content
+    if !legacy_dcm_contents.is_empty() {
+        let legacy_dcm_path = PathBuf::from(&format.output_path).join(format!("{}.dcm", format.name));
+        let mut dcm_file = File::create(legacy_dcm_path)?;
+        for line in &legacy_dcm_contents {
+            writeln!(dcm_file, "{}", line)?;
+        }
+        writeln!(dcm_file, "#End Doc Library")?;
     }
 
     let mut f = File::options().read(true).write(true).open(&fn_lib)?;
