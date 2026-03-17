@@ -14,36 +14,107 @@ Windows | WIP
 Mac | WIP
 --->
 
-## Getting started
+## What is Library Loader?
+
+Library Loader is a cross-platform Rust application that automatically downloads and organizes electronic component libraries from [Component Search Engine](https://componentsearchengine.com/) for use in various ECAD tools like KiCad, EAGLE, EasyEDA, and more.
+
+### Key Features
+
+- 🔄 **Automatic Library Processing**: Monitors a directory and automatically processes component libraries
+- 🎨 **Multiple Format Support**: KiCad, EAGLE, EasyEDA, DesignSpark PCB, and more
+- 🖥️ **Dual Interface**: Command-line (CLI) and graphical (GUI) interfaces
+- 📦 **Bazzite/Silverblue Support**: User-local installation for immutable Linux distributions
+- ✨ **KiCad QoL Improvements**: 
+  - Separate folder for `*.kicad_mod` files
+  - Concatenated legacy `*.lib` and `*.dcm` files
+  - Automatic filtering of obsolete `*.mod` files
+
+## Getting Started
+
+### Prerequisites
 
 1. Create an account on [componentsearchengine.com](https://componentsearchengine.com/) if you don't have one already.
-2. Download a prebuilt version of library-loader from the [releases page](https://github.com/olback/library-loader/releases) (only linux builds available, see [#67](https://github.com/olback/library-loader/issues/67)).
+2. Download a prebuilt version of library-loader from the [releases page](https://github.com/olback/library-loader/releases) (currently Linux builds only).
 
-### Simple install / uninstall
+### Installation
 
-On the [releases page](https://github.com/olback/library-loader/releases), download the latest `library-loader-linux-dist.tar.gz` and untar it. Each release is bundled with two scripts for installing and uninstalling library-loader :
+#### Standard Linux (System-Wide)
+
+For traditional Linux distributions with writable system directories:
 
 ```sh
-# Installs both cli/gui binaries in `/usr/bin`
-# Installs desktop entry and icon for `library-loader-gui`
-sudo install.sh
+# Extract the archive
+tar -xzf library-loader-linux-dist.tar.gz
+cd library-loader-linux-dist
 
-# Uninstall `library-loader` completely
-sudo uninstall.sh
+# Install system-wide (requires sudo)
+sudo ./dist-install.sh
 ```
 
-### Building from source using Docker
+This installs binaries to `/usr/bin/`, desktop files to `/usr/share/applications/`, and icons to `/usr/share/icons/`.
 
-This allows you to build without installing any dependencies on your machine.
+#### Bazzite/Silverblue/Read-Only Filesystems (User-Local)
 
+For immutable Linux distributions or when you don't have root access:
+
+```sh
+# Extract the archive
+tar -xzf library-loader-linux-dist.tar.gz
+cd library-loader-linux-dist
+
+# Install to user directory (no sudo required)
+./user-install.sh
 ```
+
+This installs everything to `~/.local/` directories. **Make sure `~/.local/bin` is in your PATH**:
+
+```sh
+export PATH="${HOME}/.local/bin:${PATH}"
+```
+
+Add this line to your `~/.bashrc` or `~/.zshrc` to make it permanent.
+
+#### Uninstallation
+
+```sh
+# System-wide uninstall
+sudo ./dist-uninstall.sh
+
+# User-local uninstall
+./user-uninstall.sh
+```
+
+### Quick Start
+
+1. **Generate Configuration**:
+   ```sh
+   library-loader-cli --generate
+   ```
+   
+2. **Edit Configuration**: Open `LibraryLoader.toml` and add your credentials
+   
+3. **Start Watching**:
+   ```sh
+   library-loader-cli
+   ```
+   
+4. **Download Libraries**: Go to componentsearchengine.com, find a component, and download the library file to your watch path (default: `~/Downloads`)
+
+For detailed usage instructions, see [USAGE.md](USAGE.md).
+
+### Building from Source
+
+#### Using Docker
+
+Build without installing dependencies on your machine:
+
+```sh
 docker run --volume=$(pwd):/home/circleci/project olback/rust-gtk-linux cargo build --release
 ```
 
-### Building from source locally(macOS)
+#### Building Locally (macOS)
 
-Required binaries: brew(from homebrew), rustc, cargo
-You have to install rust via rustup and initialize it with rustup-init command.
+Required: brew (from Homebrew), rustc, cargo
 
 ```shell
 ./macos-compile.sh
@@ -51,33 +122,46 @@ You have to install rust via rustup and initialize it with rustup-init command.
 
 ### Setup on macOS
 
-Edit the `LibraryLoader.example.toml` and fill in your login details for `componentsearchengine.com`. Rename the file to `LibraryLoader.toml` and place it in `~/Library/Application Support/LibraryLoader.toml`.
-
-e.g.
+Edit `LibraryLoader.example.toml` with your componentsearchengine.com credentials, then:
 
 ```shell
-cp LibraryLoader.example.toml ~/Library/Application\ Support/LibraryLoader.toml"
+cp LibraryLoader.example.toml ~/Library/Application\ Support/LibraryLoader.toml
 ```
 
 ### Running on macOS
 
 GUI:
-
 ```shell
 cargo run --bin library-loader-gui
 ```
 
-or CLI:
-
+CLI:
 ```shell
 cargo run --bin library-loader-cli
 ```
 
+## Documentation
+
+- **[USAGE.md](USAGE.md)** - Comprehensive user guide
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history
+- **[TODO.md](TODO.md)** - Upcoming features
+
 ## What/Why?
 
-This is an implementation of [https://www.samacsys.com/library-loader/](https://www.samacsys.com/library-loader/) in Rust. Why? Well, since the library-loader SamacSys provides only works on Windows, I thought it would be neat to make something similar but available to everyone.
+This is a Rust implementation of [SamacSys Library Loader](https://www.samacsys.com/library-loader/). Since the official library-loader only works on Windows, this project provides a cross-platform alternative available to everyone.
 
-For upcomming features, please see the [TODO.md](TODO.md).
+## Recent Improvements
+
+### v0.4.0+ Enhancements
+
+- **Bazzite/Silverblue Support**: New user-local installation scripts for immutable Linux distributions
+- **KiCad QoL Improvements**:
+  - `*.kicad_mod` files copied to separate `{LibraryName}_footprints/` folder for easier management
+  - Legacy `*.lib` files concatenated into single library file
+  - Legacy `*.dcm` files concatenated into single documentation file  
+  - Obsolete `*.mod` files automatically filtered out
+- **Enhanced Documentation**: Comprehensive USAGE.md with examples and troubleshooting
+- **Improved Installation**: Better error messages and guidance for different installation methods
 
 ## License
 
