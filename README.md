@@ -38,6 +38,13 @@ Library Loader is a cross-platform Rust application that automatically downloads
 
 ### Installation
 
+**Which Installation Method Should I Use?**
+
+- **Standard Linux (Ubuntu, Debian, Arch, etc.)**: Use `dist-install.sh` for system-wide installation
+- **Bazzite/Silverblue/Atomic (CLI only or with pre-built binaries)**: Use `user-install.sh`
+- **Bazzite/Silverblue/Atomic (with GUI from source)**: Use `distrobox-install.sh` to avoid rpm-ostree conflicts
+- **No root access**: Use `user-install.sh` or `distrobox-install.sh`
+
 #### Standard Linux (System-Wide)
 
 For traditional Linux distributions with writable system directories:
@@ -74,6 +81,29 @@ export PATH="${HOME}/.local/bin:${PATH}"
 
 Add this line to your `~/.bashrc` or `~/.zshrc` to make it permanent.
 
+**Note:** The user-local installation may skip the GUI if GTK3 development libraries are not available. For full GUI support on immutable systems, see the Distrobox installation method below.
+
+#### Bazzite/Silverblue with GUI Support (Distrobox)
+
+For immutable Linux distributions where installing GTK3 development libraries causes conflicts, you can build in a container with distrobox:
+
+```sh
+# Clone or extract the source code
+git clone https://github.com/ZaviiNet/library-loader.git
+cd library-loader
+
+# Build and install using distrobox (includes GUI)
+./distrobox-install.sh
+```
+
+This method:
+- Creates a Fedora container with GTK3 development libraries
+- Builds both CLI and GUI inside the container
+- Installs binaries to `~/.local/bin` on your host system
+- Works around rpm-ostree dependency conflicts on atomic systems
+
+The distrobox container is kept for future rebuilds and can be removed later with `distrobox rm library-loader-build`.
+
 #### Uninstallation
 
 ```sh
@@ -82,6 +112,9 @@ sudo ./dist-uninstall.sh
 
 # User-local uninstall
 ./user-uninstall.sh
+
+# Distrobox uninstall (also offers to remove container)
+./distrobox-uninstall.sh
 ```
 
 ### Quick Start

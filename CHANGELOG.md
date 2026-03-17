@@ -1,11 +1,12 @@
 # 0.5.0 (Unreleased)
+* **Distrobox Support**: Added `distrobox-install.sh` and `distrobox-uninstall.sh` for building with full GUI support on immutable Linux systems (Bazzite, Silverblue) by using a Fedora container. Solves rpm-ostree GTK3 dependency conflicts.
 * **Bazzite/Silverblue Support**: Added user-local installation scripts (`user-install.sh` and `user-uninstall.sh`) for immutable/read-only filesystems
 * **KiCad QoL Improvements**:
   * `*.kicad_mod` files now copied to both `.pretty/` and separate `{LibraryName}_footprints/` folder for easier management
   * Legacy `*.lib` files concatenated into single library file
   * Legacy `*.dcm` files concatenated into single documentation file
   * Obsolete `*.mod` files (legacy footprints) automatically filtered out
-* **Documentation**: Added comprehensive USAGE.md with installation instructions, configuration examples, and troubleshooting
+* **Documentation**: Added comprehensive USAGE.md with installation instructions, configuration examples, and troubleshooting. Added distrobox installation method and troubleshooting for rpm-ostree conflicts.
 * **Code Quality**: Fixed clippy warnings and improved code patterns
 * **Installation**: Updated `dist-install.sh` with better error messages and guidance for Bazzite users
 
