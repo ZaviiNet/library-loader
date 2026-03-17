@@ -280,7 +280,11 @@ Bazzite is an immutable Linux distribution based on Fedora Silverblue, designed 
 
 Traditional Linux applications install to system directories like `/usr/bin`, which are read-only on Bazzite. Library Loader now supports user-local installation, placing all files in `~/.local/`, which is always writable.
 
-### Installation on Bazzite
+### Installation Methods
+
+#### Method 1: User-Local Installation (CLI Only or Without GTK3)
+
+Quick installation without GUI (or with pre-built binaries):
 
 ```bash
 # Download and extract
@@ -290,6 +294,37 @@ cd library-loader-linux-dist
 # Install to user directory (no sudo needed)
 ./user-install.sh
 ```
+
+**Limitation:** If building from source without GTK3 development libraries, this method will only install the CLI. The GUI build will be skipped.
+
+#### Method 2: Distrobox Installation (Full GUI Support)
+
+For full GUI support on Bazzite and other atomic systems, use distrobox to build in a container:
+
+```bash
+# Clone the repository
+git clone https://github.com/ZaviiNet/library-loader.git
+cd library-loader
+
+# Build and install using distrobox
+./distrobox-install.sh
+```
+
+**How it works:**
+1. Creates a Fedora distrobox container named `library-loader-build`
+2. Installs GTK3 development libraries inside the container
+3. Builds both CLI and GUI binaries inside the container
+4. Installs the built binaries to `~/.local/bin` on your host system
+
+**Benefits:**
+- ✅ Full GUI support without modifying the host system
+- ✅ No rpm-ostree dependency conflicts
+- ✅ Container is reusable for future rebuilds
+- ✅ Works on Bazzite, Silverblue, Kinoite, and other atomic distributions
+
+**Requirements:**
+- distrobox (pre-installed on Bazzite/Silverblue)
+- podman or docker (pre-installed on most atomic systems)
 
 ### Path Configuration
 
@@ -307,19 +342,14 @@ source ~/.bashrc
 ### Uninstallation
 
 ```bash
-# Navigate to the extracted directory
-cd library-loader-linux-dist
-
-# Run user uninstall script
+# User-local uninstall
 ./user-uninstall.sh
+
+# Distrobox uninstall (includes option to remove container)
+./distrobox-uninstall.sh
 ```
 
-This removes:
-- Binaries from `~/.local/bin/`
-- Desktop file from `~/.local/share/applications/`
-- Icon from `~/.local/share/icons/`
-
-**Note:** Your configuration file (`~/.config/LibraryLoader.toml`) and downloaded libraries are preserved.
+**Note:** Both methods preserve your configuration file (`~/.config/LibraryLoader.toml`) and downloaded libraries.
 
 ### Configuration on Bazzite
 
@@ -336,12 +366,66 @@ output_path = "~/.local/share/kicad/8.0/3rdparty"
 
 ## Troubleshooting
 
+### GTK3 Installation Conflicts on Bazzite (rpm-ostree errors)
+
+**Symptom:** Trying to install GTK3 development libraries fails with rpm-ostree dependency conflicts:
+
+```
+error: Could not depsolve transaction; 1 problem detected:
+ Problem: conflicting requests
+  - package gtk3-devel requires pkgconfig(atk-bridge-2.0)...
+  - cannot install both systemd-libs-X.X-X and systemd-libs-Y.Y-Y from @System
+```
+
+**Solution:** Use the distrobox installation method instead of trying to install GTK3 system-wide:
+
+```bash
+# Clone the repository
+git clone https://github.com/ZaviiNet/library-loader.git
+cd library-loader
+
+# Build with distrobox (bypasses rpm-ostree)
+./distrobox-install.sh
+```
+
+This builds the GUI in a container where GTK3 can be installed without conflicts, then exports the binaries to your host system.
+
+### Distrobox Not Found
+
+**Symptom:** `distrobox: command not found` when running `./distrobox-install.sh`
+
+**Solutions:**
+1. On Bazzite/Silverblue, distrobox should be pre-installed. Try: `rpm-ostree install distrobox` and reboot
+2. For other distributions, install from: https://distrobox.it
+3. Verify installation: `distrobox --version`
+
+### Distrobox Build Fails
+
+**Symptom:** Build fails inside the distrobox container
+
+**Solutions:**
+1. Remove and recreate the container:
+   ```bash
+   distrobox rm -f library-loader-build
+   ./distrobox-install.sh
+   ```
+2. Check container logs:
+   ```bash
+   distrobox enter library-loader-build -- journalctl -xe
+   ```
+3. Manually enter container to debug:
+   ```bash
+   distrobox enter library-loader-build
+   cd /path/to/library-loader
+   cargo build --release
+   ```
+
 ### "Must run as root" Error
 
 **Symptom:** Running `./dist-install.sh` shows "Must run as root" error.
 
 **Solution:** 
-- On Bazzite/Silverblue: Use `./user-install.sh` instead (no sudo required)
+- On Bazzite/Silverblue: Use `./user-install.sh` or `./distrobox-install.sh` instead (no sudo required)
 - On standard Linux: Run with `sudo ./dist-install.sh`
 
 ### "library-loader-cli: command not found"
