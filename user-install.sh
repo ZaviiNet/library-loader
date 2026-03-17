@@ -20,56 +20,144 @@ mkdir -p "${BIN_DIR}"
 mkdir -p "${APPLICATIONS_DIR}"
 mkdir -p "${ICONS_DIR}"
 
-# Verify binaries exist
-if [ ! -f "library-loader-cli" ]; then
-    echo "Error: library-loader-cli not found in current directory"
+# Function to locate binaries
+locate_binaries() {
+    CLI_BIN=""
+    GUI_BIN=""
+    
+    # Check current directory first (prebuilt release scenario)
+    if [ -f "library-loader-cli" ] && [ -f "library-loader-gui" ]; then
+        CLI_BIN="library-loader-cli"
+        GUI_BIN="library-loader-gui"
+        echo "Found binaries in current directory"
+        return 0
+    fi
+    
+    # Check target/release (built from source scenario)
+    if [ -f "target/release/library-loader-cli" ] && [ -f "target/release/library-loader-gui" ]; then
+        CLI_BIN="target/release/library-loader-cli"
+        GUI_BIN="target/release/library-loader-gui"
+        echo "Found binaries in target/release/"
+        return 0
+    fi
+    
+    # Binaries not found, try to build
+    if [ -f "Cargo.toml" ]; then
+        echo "Binaries not found. Attempting to build from source..."
+        
+        # Check if cargo is available
+        if ! command -v cargo &> /dev/null; then
+            echo "Error: cargo not found. Please install Rust or download prebuilt binaries."
+            echo ""
+            echo "To install Rust: https://rustup.rs/"
+            echo "To download prebuilt binaries from: https://github.com/ZaviiNet/library-loader/releases"
+            return 1
+        fi
+        
+        echo "Building release binaries (this may take a few minutes)..."
+        
+        # Try to build everything
+        if cargo build --release 2>&1; then
+            echo "✓ Build successful"
+        else
+            # If full build fails, try building just the CLI (GUI requires GTK3)
+            echo ""
+            echo "Full build failed. Attempting to build CLI only..."
+            if cargo build --release --bin library-loader-cli 2>&1; then
+                echo "✓ CLI build successful"
+                echo ""
+                echo "Note: GUI build failed (likely due to missing GTK3 development libraries)."
+                echo "The CLI will be installed, but the GUI will not be available."
+                echo ""
+                echo "To build the GUI, install GTK3 development libraries:"
+                echo "  - Debian/Ubuntu: sudo apt-get install libgtk-3-dev"
+                echo "  - Fedora: sudo dnf install gtk3-devel"
+                echo "  - Arch: sudo pacman -S gtk3"
+            else
+                echo "Error: Build failed"
+                return 1
+            fi
+        fi
+        
+        # Check which binaries were successfully built
+        CLI_EXISTS=false
+        GUI_EXISTS=false
+        
+        if [ -f "target/release/library-loader-cli" ]; then
+            CLI_BIN="target/release/library-loader-cli"
+            CLI_EXISTS=true
+        fi
+        
+        if [ -f "target/release/library-loader-gui" ]; then
+            GUI_BIN="target/release/library-loader-gui"
+            GUI_EXISTS=true
+        fi
+        
+        if [ "$CLI_EXISTS" = false ]; then
+            echo "Error: CLI binary not found after build"
+            return 1
+        fi
+        
+        return 0
+    else
+        echo "Error: Unable to locate binaries"
+        echo ""
+        echo "Please either:"
+        echo "  1. Build the project: cargo build --release"
+        echo "  2. Download prebuilt binaries from: https://github.com/ZaviiNet/library-loader/releases"
+        return 1
+    fi
+}
+
+# Locate the binaries
+if ! locate_binaries; then
     exit 1
-fi
-
-if [ ! -f "library-loader-gui" ]; then
-    echo "Error: library-loader-gui not found in current directory"
-    exit 1
-fi
-
-# Verify binary integrity (if checksums exist)
-if [ -f "library-loader-cli.sha256" ]; then
-    echo "Verifying CLI binary integrity..."
-    sha256sum -c library-loader-cli.sha256
-fi
-
-if [ -f "library-loader-gui.sha256" ]; then
-    echo "Verifying GUI binary integrity..."
-    sha256sum -c library-loader-gui.sha256
 fi
 
 echo ""
 echo "Installing binaries to ${BIN_DIR}..."
 
-# Copy binaries
-cp library-loader-cli "${BIN_DIR}/"
-cp library-loader-gui "${BIN_DIR}/"
-
-# Make binaries executable
+# Copy CLI binary (always required)
+cp "${CLI_BIN}" "${BIN_DIR}/library-loader-cli"
 chmod +x "${BIN_DIR}/library-loader-cli"
-chmod +x "${BIN_DIR}/library-loader-gui"
+echo "✓ CLI installed"
 
-echo "✓ Binaries installed"
+# Copy GUI binary if available
+if [ -n "${GUI_BIN}" ] && [ -f "${GUI_BIN}" ]; then
+    cp "${GUI_BIN}" "${BIN_DIR}/library-loader-gui"
+    chmod +x "${BIN_DIR}/library-loader-gui"
+    echo "✓ GUI installed"
+fi
 
 # Install desktop file if it exists
+DESKTOP_FILE=""
 if [ -f "library-loader-gui.desktop" ]; then
+    DESKTOP_FILE="library-loader-gui.desktop"
+elif [ -f "ll-gui/library-loader-gui.desktop" ]; then
+    DESKTOP_FILE="ll-gui/library-loader-gui.desktop"
+fi
+
+if [ -n "${DESKTOP_FILE}" ]; then
     echo "Installing desktop integration..."
     
     # Copy and update desktop file to use full path
     sed "s|Exec=library-loader-gui|Exec=${BIN_DIR}/library-loader-gui|g" \
-        library-loader-gui.desktop > "${APPLICATIONS_DIR}/library-loader-gui.desktop"
+        "${DESKTOP_FILE}" > "${APPLICATIONS_DIR}/library-loader-gui.desktop"
     
     chmod +x "${APPLICATIONS_DIR}/library-loader-gui.desktop"
     echo "✓ Desktop file installed"
 fi
 
 # Install icon if it exists
+ICON_FILE=""
 if [ -f "library-loader-icon.svg" ]; then
-    cp library-loader-icon.svg "${ICONS_DIR}/net.olback.LibraryLoader.svg"
+    ICON_FILE="library-loader-icon.svg"
+elif [ -f "ll-gui/assets/library-loader-icon.svg" ]; then
+    ICON_FILE="ll-gui/assets/library-loader-icon.svg"
+fi
+
+if [ -n "${ICON_FILE}" ]; then
+    cp "${ICON_FILE}" "${ICONS_DIR}/net.olback.LibraryLoader.svg"
     echo "✓ Icon installed"
     
     # Update icon cache if gtk-update-icon-cache is available
@@ -101,5 +189,7 @@ fi
 echo ""
 echo "You can now run:"
 echo "  - library-loader-cli"
-echo "  - library-loader-gui"
+if [ -n "${GUI_BIN}" ] && [ -f "${BIN_DIR}/library-loader-gui" ]; then
+    echo "  - library-loader-gui"
+fi
 echo ""
