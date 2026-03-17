@@ -89,7 +89,11 @@ fi
 
 if [ -n "${ICON_FILE}" ]; then
     cp "${ICON_FILE}" /usr/share/icons/hicolor/scalable/apps/net.olback.LibraryLoader.svg
-    gtk-update-icon-cache /usr/share/icons/hicolor 2>/dev/null || true
+    
+    # Update icon cache if gtk-update-icon-cache is available
+    if command -v gtk-update-icon-cache &> /dev/null; then
+        gtk-update-icon-cache /usr/share/icons/hicolor 2>/dev/null || true
+    fi
 fi
 
 echo "Done"

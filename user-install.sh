@@ -57,13 +57,13 @@ locate_binaries() {
         echo "Building release binaries (this may take a few minutes)..."
         
         # Try to build everything
-        if cargo build --release 2>&1; then
+        if cargo build --release; then
             echo "✓ Build successful"
         else
             # If full build fails, try building just the CLI (GUI requires GTK3)
             echo ""
             echo "Full build failed. Attempting to build CLI only..."
-            if cargo build --release --bin library-loader-cli 2>&1; then
+            if cargo build --release --bin library-loader-cli; then
                 echo "✓ CLI build successful"
                 echo ""
                 echo "Note: GUI build failed (likely due to missing GTK3 development libraries)."
