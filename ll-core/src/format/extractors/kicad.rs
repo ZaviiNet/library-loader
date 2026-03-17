@@ -16,7 +16,8 @@ pub fn extract(
     }
 
     // Create a separate folder for kicad_mod files (QoL improvement)
-    let kicad_mod_folder = PathBuf::from(&format.output_path).join(format!("{}_footprints", format.name));
+    let kicad_mod_folder =
+        PathBuf::from(&format.output_path).join(format!("{}_footprints", format.name));
     if !kicad_mod_folder.exists() {
         fs::create_dir_all(kicad_mod_folder.clone())?;
     }
@@ -49,11 +50,11 @@ pub fn extract(
                 Some("kicad_mod") => {
                     let mut f_data = Vec::<u8>::new();
                     item.read_to_end(&mut f_data)?;
-                    
+
                     // Copy to .pretty folder (original location)
                     let mut f = File::create(footprint_folder.join(&base_name))?;
                     f.write_all(&f_data)?;
-                    
+
                     // Also copy to separate footprints folder (QoL improvement)
                     let mut f2 = File::create(kicad_mod_folder.join(&base_name))?;
                     f2.write_all(&f_data)?;
@@ -74,7 +75,7 @@ pub fn extract(
                     let mut f_data = Vec::<u8>::new();
                     item.read_to_end(&mut f_data)?;
                     let content = String::from_utf8_lossy(&f_data);
-                    
+
                     for line in content.lines() {
                         let trimmed = line.trim();
                         // Skip headers if we already have one, keep component definitions
@@ -93,7 +94,7 @@ pub fn extract(
                     let mut f_data = Vec::<u8>::new();
                     item.read_to_end(&mut f_data)?;
                     let content = String::from_utf8_lossy(&f_data);
-                    
+
                     for line in content.lines() {
                         let trimmed = line.trim();
                         // Skip headers if we already have one, keep component descriptions
@@ -120,7 +121,8 @@ pub fn extract(
 
     // Write concatenated legacy .lib file if we have content
     if !legacy_lib_contents.is_empty() {
-        let legacy_lib_path = PathBuf::from(&format.output_path).join(format!("{}.lib", format.name));
+        let legacy_lib_path =
+            PathBuf::from(&format.output_path).join(format!("{}.lib", format.name));
         let mut lib_file = File::create(legacy_lib_path)?;
         for line in &legacy_lib_contents {
             writeln!(lib_file, "{}", line)?;
@@ -130,7 +132,8 @@ pub fn extract(
 
     // Write concatenated legacy .dcm file if we have content
     if !legacy_dcm_contents.is_empty() {
-        let legacy_dcm_path = PathBuf::from(&format.output_path).join(format!("{}.dcm", format.name));
+        let legacy_dcm_path =
+            PathBuf::from(&format.output_path).join(format!("{}.dcm", format.name));
         let mut dcm_file = File::create(legacy_dcm_path)?;
         for line in &legacy_dcm_contents {
             writeln!(dcm_file, "{}", line)?;
