@@ -53,12 +53,21 @@ locate_binaries() {
     if [ -f "Cargo.toml" ]; then
         echo "Binaries not found. Attempting to build from source..."
         
+        # Try to source cargo environment if it exists (for freshly installed Rust)
+        if [ -f "${HOME}/.cargo/env" ]; then
+            # shellcheck disable=SC1091
+            . "${HOME}/.cargo/env"
+        fi
+        
         # Check if cargo is available
         if ! command -v cargo &> /dev/null; then
             echo "Error: cargo not found. Please install Rust or download prebuilt binaries."
             echo ""
             echo "To install Rust: https://rustup.rs/"
             echo "To download prebuilt binaries from: https://github.com/ZaviiNet/library-loader/releases"
+            echo ""
+            echo "If you just installed Rust, try restarting your terminal or running:"
+            echo "    source \"\$HOME/.cargo/env\""
             return 1
         fi
         
