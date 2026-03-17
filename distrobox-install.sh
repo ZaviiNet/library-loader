@@ -77,6 +77,9 @@ distrobox enter "${CONTAINER_NAME}" -- bash -c '
     # Install Rust if not present
     if ! command -v cargo &> /dev/null; then
         echo "Installing Rust..."
+        # Note: Installing Rust via rustup.rs (official method)
+        # This is the standard installation method recommended by the Rust project.
+        # Users concerned about security should review https://rustup.rs/ before running this script.
         curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "${HOME}/.cargo/env"
     fi
@@ -163,7 +166,8 @@ if [ -n "${DESKTOP_FILE}" ]; then
     echo "Installing desktop integration..."
     
     # Copy and update desktop file to use full path
-    sed "s|Exec=library-loader-gui|Exec=${BIN_DIR}/library-loader-gui|g" \
+    # Use ^Exec= to only match at the start of lines (avoid matching TryExec or comments)
+    sed "s|^Exec=library-loader-gui|Exec=${BIN_DIR}/library-loader-gui|g" \
         "${DESKTOP_FILE}" > "${APPLICATIONS_DIR}/library-loader-gui.desktop"
     
     chmod +x "${APPLICATIONS_DIR}/library-loader-gui.desktop"

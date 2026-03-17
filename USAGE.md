@@ -417,15 +417,15 @@ This builds the GUI in a container where GTK3 can be installed without conflicts
    distrobox rm -f library-loader-build
    ./distrobox-install.sh
    ```
-2. Check container logs:
-   ```bash
-   distrobox enter library-loader-build -- journalctl -xe
-   ```
-3. Manually enter container to debug:
+2. Manually enter container to debug:
    ```bash
    distrobox enter library-loader-build
    cd /path/to/library-loader
    cargo build --release
+   ```
+3. Check container logs (if using podman):
+   ```bash
+   podman logs library-loader-build
    ```
 
 ### "Must run as root" Error
