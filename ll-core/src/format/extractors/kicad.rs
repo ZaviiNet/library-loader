@@ -153,12 +153,12 @@ pub fn extract(
             .map(|l| l.expect("Could not parse line"))
             .collect();
         let end = &lines.len() - 1;
-        for i in 0..end {
+        for line in lines.iter_mut().take(end) {
             //this is necessary to point symbols to correct footprint library
-            let parts = lines[i].split_whitespace().collect::<Vec<_>>();
+            let parts = line.split_whitespace().collect::<Vec<_>>();
             if parts.len() >= 2 && parts[0] == "(property" && parts[1] == "\"Footprint\"" {
                 let footprint_name = &parts[2][1..(parts[2].len() - 1)];
-                lines[i] = lines[i].replace(
+                *line = line.replace(
                     footprint_name,
                     &format!("{}:{}", format.name, &footprint_name),
                 );
