@@ -26,18 +26,26 @@ locate_binaries() {
     GUI_BIN=""
     
     # Check current directory first (prebuilt release scenario)
-    if [ -f "library-loader-cli" ] && [ -f "library-loader-gui" ]; then
+    if [ -f "library-loader-cli" ]; then
         CLI_BIN="library-loader-cli"
-        GUI_BIN="library-loader-gui"
-        echo "Found binaries in current directory"
+        echo "Found CLI binary in current directory"
+        
+        if [ -f "library-loader-gui" ]; then
+            GUI_BIN="library-loader-gui"
+            echo "Found GUI binary in current directory"
+        fi
         return 0
     fi
     
     # Check target/release (built from source scenario)
-    if [ -f "target/release/library-loader-cli" ] && [ -f "target/release/library-loader-gui" ]; then
+    if [ -f "target/release/library-loader-cli" ]; then
         CLI_BIN="target/release/library-loader-cli"
-        GUI_BIN="target/release/library-loader-gui"
-        echo "Found binaries in target/release/"
+        echo "Found CLI binary in target/release/"
+        
+        if [ -f "target/release/library-loader-gui" ]; then
+            GUI_BIN="target/release/library-loader-gui"
+            echo "Found GUI binary in target/release/"
+        fi
         return 0
     fi
     

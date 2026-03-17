@@ -22,30 +22,40 @@ locate_binaries() {
     GUI_BIN=""
     
     # Check current directory first (prebuilt release scenario)
-    if [ -f "library-loader-cli" ] && [ -f "library-loader-gui" ]; then
+    if [ -f "library-loader-cli" ]; then
         CLI_BIN="library-loader-cli"
-        GUI_BIN="library-loader-gui"
-        echo "Found binaries in current directory"
+        echo "Found CLI binary in current directory"
         
-        # Verify binary integrity (if checksums exist)
+        # Verify CLI binary integrity (if checksum exists)
         if [ -f "library-loader-cli.sha256" ]; then
             echo "Verifying CLI binary integrity..."
             sha256sum -c library-loader-cli.sha256
         fi
         
-        if [ -f "library-loader-gui.sha256" ]; then
-            echo "Verifying GUI binary integrity..."
-            sha256sum -c library-loader-gui.sha256
+        if [ -f "library-loader-gui" ]; then
+            GUI_BIN="library-loader-gui"
+            echo "Found GUI binary in current directory"
+            
+            # Verify GUI binary integrity (if checksum exists)
+            if [ -f "library-loader-gui.sha256" ]; then
+                echo "Verifying GUI binary integrity..."
+                sha256sum -c library-loader-gui.sha256
+            fi
         fi
         
         return 0
     fi
     
     # Check target/release (built from source scenario)
-    if [ -f "target/release/library-loader-cli" ] && [ -f "target/release/library-loader-gui" ]; then
+    if [ -f "target/release/library-loader-cli" ]; then
         CLI_BIN="target/release/library-loader-cli"
-        GUI_BIN="target/release/library-loader-gui"
-        echo "Found binaries in target/release/"
+        echo "Found CLI binary in target/release/"
+        
+        if [ -f "target/release/library-loader-gui" ]; then
+            GUI_BIN="target/release/library-loader-gui"
+            echo "Found GUI binary in target/release/"
+        fi
+        
         return 0
     fi
     
@@ -65,7 +75,10 @@ fi
 
 # Copy binaries
 cp "${CLI_BIN}" /usr/bin/library-loader-cli
-cp "${GUI_BIN}" /usr/bin/library-loader-gui
+
+if [ -n "${GUI_BIN}" ] && [ -f "${GUI_BIN}" ]; then
+    cp "${GUI_BIN}" /usr/bin/library-loader-gui
+fi
 
 # Install desktop file if it exists
 DESKTOP_FILE=""
