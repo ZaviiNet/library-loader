@@ -280,6 +280,14 @@ Bazzite is an immutable Linux distribution based on Fedora Silverblue, designed 
 
 Traditional Linux applications install to system directories like `/usr/bin`, which are read-only on Bazzite. Library Loader now supports user-local installation, placing all files in `~/.local/`, which is always writable.
 
+Additionally, installing GTK3 development libraries on atomic systems causes rpm-ostree dependency conflicts. The distrobox method solves this by building in a container.
+
+### Which Method Should I Use?
+
+- **Pre-built binaries**: Use Method 1 (user-install.sh)
+- **Building from source WITHOUT GUI**: Use Method 1 (user-install.sh)
+- **Building from source WITH GUI**: Use Method 2 (distrobox-install.sh) - **Recommended for Bazzite users**
+
 ### Installation Methods
 
 #### Method 1: User-Local Installation (CLI Only or Without GTK3)

@@ -38,6 +38,13 @@ Library Loader is a cross-platform Rust application that automatically downloads
 
 ### Installation
 
+**Which Installation Method Should I Use?**
+
+- **Standard Linux (Ubuntu, Debian, Arch, etc.)**: Use `dist-install.sh` for system-wide installation
+- **Bazzite/Silverblue/Atomic (CLI only or with pre-built binaries)**: Use `user-install.sh`
+- **Bazzite/Silverblue/Atomic (with GUI from source)**: Use `distrobox-install.sh` to avoid rpm-ostree conflicts
+- **No root access**: Use `user-install.sh` or `distrobox-install.sh`
+
 #### Standard Linux (System-Wide)
 
 For traditional Linux distributions with writable system directories:
