@@ -1,3 +1,14 @@
+# 0.5.0 (Unreleased)
+* **Bazzite/Silverblue Support**: Added user-local installation scripts (`user-install.sh` and `user-uninstall.sh`) for immutable/read-only filesystems
+* **KiCad QoL Improvements**:
+  * `*.kicad_mod` files now copied to both `.pretty/` and separate `{LibraryName}_footprints/` folder for easier management
+  * Legacy `*.lib` files concatenated into single library file
+  * Legacy `*.dcm` files concatenated into single documentation file
+  * Obsolete `*.mod` files (legacy footprints) automatically filtered out
+* **Documentation**: Added comprehensive USAGE.md with installation instructions, configuration examples, and troubleshooting
+* **Code Quality**: Fixed clippy warnings and improved code patterns
+* **Installation**: Updated `dist-install.sh` with better error messages and guidance for Bazzite users
+
 # 0.4.0
 * Bump dependencies.
 
